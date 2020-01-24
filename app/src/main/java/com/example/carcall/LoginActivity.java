@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
 
         email = findViewById(R.id.email);
         pass = findViewById(R.id.password);
@@ -46,14 +45,21 @@ public class LoginActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (TextUtils.isEmpty(email.getText().toString()) || TextUtils.isEmpty(pass.getText().toString())) {
+                    Toast.makeText(LoginActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
+                } else {
+                    signIn(email.getText().toString(), pass.getText().toString());
+                }
             }
         });
         //REGISTRO
         registro.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (TextUtils.isEmpty(email.getText().toString()) || TextUtils.isEmpty(pass.getText().toString())){
+                if (TextUtils.isEmpty(email.getText().toString()) || TextUtils.isEmpty(pass.getText().toString())) {
                     Toast.makeText(LoginActivity.this, "Empty fields", Toast.LENGTH_SHORT).show();
+                } else if (pass.getText().toString().length() < 6) {
+                    Toast.makeText(LoginActivity.this, "Minimum 6 characters", Toast.LENGTH_SHORT).show();
                 } else {
                     createAccount(email.getText().toString(), pass.getText().toString());
                 }
@@ -62,8 +68,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void createAccount(String email, String password){
-        Log.i("@@@@@@@@@@@@@@@@@@@@@", email);
-        Log.i("@@@@@@@@@@@@@@@@@@@@@", password);
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -93,6 +97,22 @@ public class LoginActivity extends AppCompatActivity {
                              */
                         } else {
                             // If sign in fails, display a message to the user.
+                            Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    private void signIn(String email, String password){
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this, "OK",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
