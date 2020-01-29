@@ -80,11 +80,7 @@ public class LoginActivity extends AppCompatActivity {
                             databaseReference = FirebaseDatabase.getInstance().getReference()
                                     .child("usuarios").child(user.getUid());
 
-                            HashMap<String, String> hashMap = new HashMap<>();
-                            hashMap.put("id", user.getUid());
-                            hashMap.put("email", user.getEmail());
-
-                            databaseReference.setValue(hashMap);
+                            databaseReference.setValue(new User(user.getUid(), user.getEmail(), "", ""));
 
                             Toast.makeText(LoginActivity.this, "Register OK.",
                                     Toast.LENGTH_SHORT).show();
