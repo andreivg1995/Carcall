@@ -1,4 +1,4 @@
-package com.example.carcall;
+package com.example.carcall.model;
 
 public class User {
 

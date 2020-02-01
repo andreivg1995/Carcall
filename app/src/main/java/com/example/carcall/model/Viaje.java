@@ -1,11 +1,12 @@
-package com.example.carcall;
+package com.example.carcall.model;
 
 public class Viaje {
 
-    String id, cSalida, cLlegada, hSalida, hLlegada, uid;
+    String id, fecha, cSalida, cLlegada, hSalida, hLlegada, uid;
 
-    public Viaje(String id, String cSalida, String cLlegada, String hSalida, String hLlegada, String uid) {
+    public Viaje(String id, String fecha, String cSalida, String cLlegada, String hSalida, String hLlegada, String uid) {
         this.id = id;
+        this.fecha = fecha;
         this.cSalida = cSalida;
         this.cLlegada = cLlegada;
         this.hSalida = hSalida;
@@ -23,6 +24,14 @@ public class Viaje {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(String fecha) {
+        this.fecha = fecha;
     }
 
     public String getcSalida() {
