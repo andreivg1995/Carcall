@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.example.carcall.MVVMRepository;
 import com.example.carcall.R;
 import com.example.carcall.model.Viaje;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -109,7 +110,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 databaseReference = FirebaseDatabase.getInstance().getReference()
                         .child("viajes").push();
 
-                databaseReference.setValue(new Viaje(databaseReference.getKey(), "", address, "", "", "", user.getUid()));
+                databaseReference.setValue(new Viaje(databaseReference.getKey(), MVVMRepository.getDiaActual(MVVMRepository.fechaActualDiaHora()),
+                        address, "", "", "", user.getUid()));
             }
         });
 

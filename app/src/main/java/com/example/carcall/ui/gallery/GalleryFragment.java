@@ -5,11 +5,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -88,9 +91,28 @@ public class GalleryFragment extends Fragment {
         }
 
         @Override
-        protected void onBindViewHolder(@NonNull AdapterViajes.ViewHolder holder, int position, @NonNull Viaje model) {
+        protected void onBindViewHolder(@NonNull final AdapterViajes.ViewHolder holder, final int position, @NonNull final Viaje model) {
             // Bind the Chat object to the ChatHolder
+            holder.tvFechaReserva.setText(model.getFecha());
             holder.tvCalleSalida.setText(model.getcSalida());
+            holder.tvCalleLlegada.setText(model.getcLlegada());
+
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(getContext(), "Has pulsado " + model.getFecha(), Toast.LENGTH_SHORT).show();
+
+                    ViajesDetailFragment fragment = new ViajesDetailFragment();
+
+                    Bundle bundle = new Bundle();
+                    bundle.putString("salida_key", model.gethSalida());
+                    bundle.putString("llegada_key", model.gethLlegada());
+
+                    fragment.setArguments(bundle);
+                    //Se crea un nuevo fragment en mobile_navigation con el layout correspondiente de la clase detalle
+                    Navigation.findNavController(holder.itemView).navigate(R.id.nav_viajes_detail, bundle);
+                }
+            });
         }
 
         @NonNull
@@ -103,12 +125,14 @@ public class GalleryFragment extends Fragment {
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvCalleSalida;
+            TextView tvFechaReserva, tvCalleSalida, tvCalleLlegada;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
 
+                tvFechaReserva = itemView.findViewById(R.id.tvFechaReserva);
                 tvCalleSalida = itemView.findViewById(R.id.tvCalleSalida);
+                tvCalleLlegada = itemView.findViewById(R.id.tvCalleLlegada);
             }
         }
     }
