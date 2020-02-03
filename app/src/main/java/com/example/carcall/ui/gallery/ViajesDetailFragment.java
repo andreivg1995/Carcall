@@ -11,28 +11,32 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.carcall.R;
 
 public class ViajesDetailFragment extends Fragment {
 
-    private ViajesDetailViewModel mViewModel;
-
-    public static ViajesDetailFragment newInstance() {
-        return new ViajesDetailFragment();
-    }
+    private ViajesDetailViewModel viajesDetailViewModel;
+    TextView hSalida, hLlegada;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_viajes_detail, container, false);
-    }
+        //viajesDetailViewModel =
+        View root = inflater.inflate(R.layout.fragment_viajes_detail, container, false);
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        mViewModel = ViewModelProviders.of(this).get(ViajesDetailViewModel.class);
-        // TODO: Use the ViewModel
-    }
+        hSalida = root.findViewById(R.id.tvhSalida);
+        hLlegada = root.findViewById(R.id.tvhLlegada);
 
+        // Inflate the layout for this fragment
+        Bundle bundle = this.getArguments();
+        String bhSalida = bundle.getString("salida_key");
+        String bhLlegada = bundle.getString("llegada_key");
+
+        hSalida.setText(bhSalida);
+        hLlegada.setText(bhLlegada);
+
+        return root;
+    }
 }
