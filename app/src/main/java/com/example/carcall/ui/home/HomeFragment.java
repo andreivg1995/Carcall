@@ -132,8 +132,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
                     MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You are here");
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
                     mMap.addMarker(markerOptions);
+
+                    LatLng latLng2 = new LatLng(41.416465, 2.194923);
+                    MarkerOptions markerOptions2 = new MarkerOptions().position(latLng2).title("You Destination here");
+                    mMap.addMarker(markerOptions2);
+
+                    Location loc1 = new Location("");
+                    loc1.setLatitude(latLng.latitude);
+                    loc1.setLongitude(latLng.longitude);
+
+                    Location loc2 = new Location("");
+                    loc2.setLatitude(latLng2.latitude);
+                    loc2.setLongitude(latLng2.longitude);
                 }
             }
         });
