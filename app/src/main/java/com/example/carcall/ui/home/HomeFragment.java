@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,7 +38,18 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.List;
 import java.util.Locale;
 
@@ -146,6 +158,10 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     Location loc2 = new Location("");
                     loc2.setLatitude(latLng2.latitude);
                     loc2.setLongitude(latLng2.longitude);
+
+
+                    CalculateDistance calculateDistance = new CalculateDistance();
+                    calculateDistance.execute();
                 }
             }
         });
@@ -168,6 +184,132 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     mMapFragment.getMapAsync(this);
                 }
                 break;
+        }
+    }
+
+    public class CalculateDistance extends AsyncTask<String, String, String> {
+
+        public CalculateDistance() {
+
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            BufferedReader reader = null;
+            HttpURLConnection urlConnection = null;
+            URL url = null;
+            String forecastJsonStr = null;
+
+            LatLng latLng = new LatLng(41.417,2.2001);
+            LatLng latLng2 = new LatLng(41.416465, 2.194923);
+
+            try {
+                url = new URL("https://maps.googleapis.com/maps/api/distancematrix/json?origins="+
+                        latLng.latitude+","+latLng.longitude+"&destinations="+latLng2.latitude+","+latLng2.longitude+
+                        "&mode=driving&key=AIzaSyA22u5QBvoTQ4bSYuotFcm_4EQIySHmWVA&sensor=true");
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            InputStream inputStream = null;
+            try {
+                inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (inputStream == null) {
+                    // Nothing to do.
+                    return null;
+                }
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                        // But it does make debugging a *lot* easier if you print out the completed
+                        // buffer for debugging.
+                        buffer.append(line + "\n");
+                    }
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return null;
+                }
+
+                forecastJsonStr = buffer.toString();
+
+                Log.i("@@@@@@@@@@@@@@@@@@@", forecastJsonStr);
+                return forecastJsonStr;
+
+            } catch (IOException e) {
+                Log.e("Exception", "Error ", e);
+                // If the code didn't successfully get the weather data, there's no point in attempting to parse it.
+                return null;
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e("Exception", "Error closing stream", e);
+                    }
+                }
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                JSONObject object = new JSONObject(s);
+                if (object.get("status").equals("OK")) {
+                    JSONArray routesArry = object.optJSONArray("routes");
+                    if (routesArry != null && routesArry.length() > 0) {
+                        JSONObject routesObject = routesArry.optJSONObject(0);
+                        if (routesObject != null) {
+                            JSONArray legArrry = routesObject.optJSONArray("legs");
+                            if (legArrry != null && legArrry.length() > 0) {
+                                JSONObject legObject = legArrry.optJSONObject(0);
+                                if (legObject != null) {
+                                    JSONObject distanceObject = legObject.optJSONObject("distance");
+                                    if (distanceObject != null) {
+                                        String totalDistance = distanceObject.optString("text");
+                                        Log.e("TotalDistance", totalDistance);
+
+                                        //Distance may come in meter or kilometer, If distance between source and destination is less than 1KM it shows distane in meter
+                                        double dis;
+                                        if (totalDistance.contains("km")) {
+                                            totalDistance = totalDistance.replace(" km", "");
+                                            dis = Double.parseDouble(totalDistance);
+                                        } else {
+                                            totalDistance = totalDistance.replace(" m", "");
+                                            dis = Double.parseDouble(totalDistance) / 1000;
+                                        }
+
+                                        totalDistance = String.valueOf(dis);
+                                        Log.e("TotalDistance in km/m", totalDistance);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
