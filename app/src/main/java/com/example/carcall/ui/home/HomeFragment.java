@@ -31,6 +31,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -64,6 +65,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private FusedLocationProviderClient fusedLocationClient;
     private static final int REQUEST_CODE = 101;
 
+    private Marker marker = null;
+
     Button bReserva;
 
     FirebaseAuth mAuth;
@@ -86,7 +89,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                 != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(getActivity(), new String[]
                     {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
-            Log.i("@@@@@@@@@@@@@@@@", "pido permiso");
         }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used
@@ -142,15 +144,28 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     currentLocation = location;
 
                     LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-                    MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You are here");
+                    final MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You are here");
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
                     mMap.addMarker(markerOptions);
 
-                    LatLng latLng2 = new LatLng(41.416465, 2.194923);
-                    MarkerOptions markerOptions2 = new MarkerOptions().position(latLng2).title("You Destination here");
-                    mMap.addMarker(markerOptions2);
+                    //Destination with location click from map
+                    mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                        @Override
+                        public void onMapClick(LatLng point) {
+                            if (marker != null) {
+                                marker.remove();
+                            }
+                            LatLng latLng2 = new LatLng(point.latitude, point.longitude);
+                            marker = mMap.addMarker(new MarkerOptions().position(latLng2).title("Destination"));
 
+                            System.out.println(point.latitude + "---" + point.longitude);
+                        }
+                    });
+
+                    //Guardar localización
+
+                    /*
                     Location loc1 = new Location("");
                     loc1.setLatitude(latLng.latitude);
                     loc1.setLongitude(latLng.longitude);
@@ -159,13 +174,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     loc2.setLatitude(latLng2.latitude);
                     loc2.setLongitude(latLng2.longitude);
 
-
-                    CalculateDistance calculateDistance = new CalculateDistance();
+                    //Se envia el origen y el destino al thread
+                    CalculateDistance calculateDistance = new CalculateDistance(loc1, loc2);
                     calculateDistance.execute();
+                     */
                 }
             }
         });
-
         // Marker in Sydney
         /*
         LatLng latLng = new LatLng(-34,151);
@@ -189,8 +204,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     public class CalculateDistance extends AsyncTask<String, String, String> {
 
-        public CalculateDistance() {
+        String forecastJsonStr = null;
+        Location orig, dest;
 
+        public CalculateDistance(Location orig, Location dest) {
+            this.orig = orig;
+            this.dest = dest;
         }
 
         @Override
@@ -198,10 +217,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
             BufferedReader reader = null;
             HttpURLConnection urlConnection = null;
             URL url = null;
-            String forecastJsonStr = null;
 
-            LatLng latLng = new LatLng(41.417,2.2001);
-            LatLng latLng2 = new LatLng(41.416465, 2.194923);
+            LatLng latLng = new LatLng(orig.getLatitude(), orig.getLongitude());
+            LatLng latLng2 = new LatLng(dest.getLatitude(), dest.getLongitude());
 
             try {
                 url = new URL("https://maps.googleapis.com/maps/api/distancematrix/json?origins="+
@@ -273,40 +291,23 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+
             try {
-                JSONObject object = new JSONObject(s);
-                if (object.get("status").equals("OK")) {
-                    JSONArray routesArry = object.optJSONArray("routes");
-                    if (routesArry != null && routesArry.length() > 0) {
-                        JSONObject routesObject = routesArry.optJSONObject(0);
-                        if (routesObject != null) {
-                            JSONArray legArrry = routesObject.optJSONArray("legs");
-                            if (legArrry != null && legArrry.length() > 0) {
-                                JSONObject legObject = legArrry.optJSONObject(0);
-                                if (legObject != null) {
-                                    JSONObject distanceObject = legObject.optJSONObject("distance");
-                                    if (distanceObject != null) {
-                                        String totalDistance = distanceObject.optString("text");
-                                        Log.e("TotalDistance", totalDistance);
+                // get JSONObject from JSON file
+                JSONObject obj = new JSONObject(forecastJsonStr);
+                String dest = obj.getJSONArray("origin_addresses").toString();
+                String orig = obj.getJSONArray("destination_addresses").toString();
 
-                                        //Distance may come in meter or kilometer, If distance between source and destination is less than 1KM it shows distane in meter
-                                        double dis;
-                                        if (totalDistance.contains("km")) {
-                                            totalDistance = totalDistance.replace(" km", "");
-                                            dis = Double.parseDouble(totalDistance);
-                                        } else {
-                                            totalDistance = totalDistance.replace(" m", "");
-                                            dis = Double.parseDouble(totalDistance) / 1000;
-                                        }
+                String distance = obj.getJSONArray("rows").getJSONObject(0).getJSONArray("elements")
+                        .getJSONObject(0).getJSONObject("distance").get("text").toString();
+                String duration = obj.getJSONArray("rows").getJSONObject(0).getJSONArray("elements")
+                        .getJSONObject(0).getJSONObject("duration").get("text").toString();
 
-                                        totalDistance = String.valueOf(dis);
-                                        Log.e("TotalDistance in km/m", totalDistance);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                Log.i("@@@@@@@@@@@@@@@@@@@@@@", orig);
+                Log.i("@@@@@@@@@@@@@@@@@@@@@@", dest);
+                Log.i("@@@@@@@@@@@@@@@@@@@@@@", distance);
+                Log.i("@@@@@@@@@@@@@@@@@@@@@@", duration);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
