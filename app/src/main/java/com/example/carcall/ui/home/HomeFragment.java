@@ -67,6 +67,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private Marker marker = null;
 
+    Location loc1, loc2;
+
     Button bReserva;
 
     FirebaseAuth mAuth;
@@ -149,6 +151,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
                     mMap.addMarker(markerOptions);
 
+                    //Guardar localización
+                    loc1 = new Location("");
+                    loc1.setLatitude(latLng.latitude);
+                    loc1.setLongitude(latLng.longitude);
+
                     //Destination with location click from map
                     mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                         @Override
@@ -156,28 +163,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                             if (marker != null) {
                                 marker.remove();
                             }
+                            loc2 = new Location("");
                             LatLng latLng2 = new LatLng(point.latitude, point.longitude);
                             marker = mMap.addMarker(new MarkerOptions().position(latLng2).title("Destination"));
+
+                            loc2.setLatitude(latLng2.latitude);
+                            loc2.setLongitude(latLng2.longitude);
+
+                            //Se envia el origen y el destino al thread
+                            CalculateDistance calculateDistance = new CalculateDistance(loc1, loc2);
+                            calculateDistance.execute();
 
                             System.out.println(point.latitude + "---" + point.longitude);
                         }
                     });
-
-                    //Guardar localización
-
-                    /*
-                    Location loc1 = new Location("");
-                    loc1.setLatitude(latLng.latitude);
-                    loc1.setLongitude(latLng.longitude);
-
-                    Location loc2 = new Location("");
-                    loc2.setLatitude(latLng2.latitude);
-                    loc2.setLongitude(latLng2.longitude);
-
-                    //Se envia el origen y el destino al thread
-                    CalculateDistance calculateDistance = new CalculateDistance(loc1, loc2);
-                    calculateDistance.execute();
-                     */
                 }
             }
         });
