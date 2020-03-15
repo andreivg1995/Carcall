@@ -1,7 +1,11 @@
 package com.example.carcall;
 
 import android.app.Dialog;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -14,6 +18,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -97,6 +102,8 @@ public class MainActivity extends AppCompatActivity {
         FireMissilesDialogFragment fireMissilesDialogFragment =
                 new FireMissilesDialogFragment();
         fireMissilesDialogFragment.show(getSupportFragmentManager(), "test");
+
+        addNotification();
     }
 
     @Override
@@ -111,6 +118,22 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    private void addNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_menu_manage)
+                .setContentTitle("Title test")
+                .setContentText("Content test")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        // Create an explicit intent for an Activity in your app
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0, builder.build());
     }
 
     public static class FireMissilesDialogFragment extends DialogFragment {
